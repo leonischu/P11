@@ -1,0 +1,228 @@
+.vendor-registration-page {
+  min-height: 100vh;
+  background-color: var(--gray-50);
+  padding: var(--spacing-3xl) 0;
+}
+
+.registration-header {
+  text-align: center;
+  margin-bottom: var(--spacing-3xl);
+}
+
+.registration-header h1 {
+  font-size: var(--font-size-4xl);
+  color: var(--gray-900);
+  margin-bottom: var(--spacing-md);
+}
+
+.registration-header p {
+  font-size: var(--font-size-lg);
+  color: var(--gray-600);
+}
+
+.registration-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.progress-steps {
+  display: flex;
+  background-color: var(--gray-100);
+  padding: var(--spacing-xl);
+}
+
+.step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 20px;
+  right: -50%;
+  width: 100%;
+  height: 2px;
+  background-color: var(--gray-300);
+  z-index: 1;
+}
+
+.step.completed:not(:last-child)::after {
+  background-color: var(--primary-color);
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--gray-300);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+  position: relative;
+  z-index: 2;
+  transition: all var(--transition-fast);
+}
+
+.step.active .step-number {
+  background-color: var(--primary-color);
+}
+
+.step.completed .step-number {
+  background-color: var(--success-color);
+}
+
+.step-label {
+  font-size: var(--font-size-sm);
+  color: var(--gray-600);
+  text-align: center;
+}
+
+.step.active .step-label {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.registration-form {
+  padding: var(--spacing-3xl);
+}
+
+.step-content h2 {
+  font-size: var(--font-size-2xl);
+  color: var(--gray-900);
+  margin-bottom: var(--spacing-2xl);
+  text-align: center;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.checkbox-label:hover {
+  background-color: var(--gray-50);
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin: 0;
+}
+
+.form-help {
+  display: block;
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  color: var(--gray-500);
+}
+
+.terms-section {
+  margin-top: var(--spacing-xl);
+  padding: var(--spacing-lg);
+  background-color: var(--gray-50);
+  border-radius: var(--radius-md);
+}
+
+.terms-section a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.terms-section a:hover {
+  text-decoration: underline;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--spacing-3xl);
+  padding-top: var(--spacing-xl);
+  border-top: 1px solid var(--gray-200);
+}
+
+.form-actions .btn {
+  min-width: 120px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .vendor-registration-page {
+    padding: var(--spacing-2xl) 0;
+  }
+
+  .progress-steps {
+    padding: var(--spacing-lg);
+  }
+
+  .step {
+    font-size: var(--font-size-xs);
+  }
+
+  .step-number {
+    width: 30px;
+    height: 30px;
+    font-size: var(--font-size-sm);
+  }
+
+  .registration-form {
+    padding: var(--spacing-2xl);
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .registration-header h1 {
+    font-size: var(--font-size-3xl);
+  }
+
+  .step-content h2 {
+    font-size: var(--font-size-xl);
+  }
+
+  .registration-form {
+    padding: var(--spacing-lg);
+  }
+}

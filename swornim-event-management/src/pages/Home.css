@@ -1,0 +1,284 @@
+/* Home Page Specific Styles */
+.home {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Reset any inherited margins/padding */
+.home * {
+  box-sizing: border-box;
+}
+
+/* Section Layout - Clear Separation */
+.home section {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+  clear: both;
+  display: block;
+}
+
+/* Hero Section - No padding/margin conflicts */
+.home .hero {
+  margin: 0;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* Trust Indicators */
+.home .trust-indicators {
+  background-color: var(--gray-50);
+  padding: var(--spacing-3xl) 0;
+  margin: 0;
+  position: relative;
+  z-index: 2;
+  border-top: 1px solid var(--gray-200);
+}
+
+/* Stats Section */
+.home .stats-section {
+  background-color: var(--white);
+  padding: var(--spacing-4xl) 0;
+  margin: 0;
+  position: relative;
+  z-index: 3;
+}
+
+/* How It Works */
+.home .how-it-works {
+  background-color: var(--gray-50);
+  padding: var(--spacing-4xl) 0;
+  margin: 0;
+  position: relative;
+  z-index: 4;
+}
+
+/* Featured Services */
+.home .featured-services {
+  background-color: var(--white);
+  padding: var(--spacing-4xl) 0;
+  margin: 0;
+  position: relative;
+  z-index: 5;
+}
+
+/* Why Choose Us */
+.home .why-choose-us {
+  background-color: var(--gray-50);
+  padding: var(--spacing-4xl) 0;
+  margin: 0;
+  position: relative;
+  z-index: 6;
+}
+
+/* Recent Events */
+.home .recent-events {
+  background-color: var(--white);
+  padding: var(--spacing-4xl) 0;
+  margin: 0;
+  position: relative;
+  z-index: 7;
+}
+
+/* Testimonials */
+.home .testimonials {
+  background-color: var(--gray-50);
+  padding: var(--spacing-4xl) 0;
+  margin: 0;
+  position: relative;
+  z-index: 8;
+}
+
+/* Newsletter */
+.home .newsletter {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  padding: var(--spacing-4xl) 0;
+  margin: 0;
+  position: relative;
+  z-index: 10;
+}
+
+/* Call to Action */
+.home .call-to-action {
+  background-color: var(--gray-900);
+  padding: var(--spacing-4xl) 0;
+  margin: 0;
+  position: relative;
+  z-index: 11;
+}
+
+/* Container Override for Home Page */
+.home .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+  width: 100%;
+  position: relative;
+}
+
+/* Section Headers - Consistent Styling */
+.home .section-header {
+  text-align: center;
+  margin-bottom: var(--spacing-4xl);
+  padding: 0;
+}
+
+.home .section-header h2 {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: var(--spacing-lg);
+  line-height: 1.2;
+}
+
+.home .section-header p {
+  font-size: var(--font-size-lg);
+  color: var(--gray-600);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Clear Floats and Positioning Issues */
+.home::before,
+.home::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Prevent Overlapping */
+.home section + section {
+  margin-top: 0;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1200px) {
+  .home .container {
+    max-width: 960px;
+    padding: 0 var(--spacing-lg);
+  }
+}
+
+@media (max-width: 992px) {
+  .home .container {
+    max-width: 720px;
+    padding: 0 var(--spacing-md);
+  }
+
+  .home section {
+    padding: var(--spacing-3xl) 0;
+  }
+
+  .home .trust-indicators,
+  .home .stats-section,
+  .home .how-it-works,
+  .home .featured-services,
+  .home .why-choose-us,
+  .home .recent-events,
+  .home .testimonials,
+  .home .faq-section,
+  .home .newsletter,
+  .home .call-to-action {
+    padding: var(--spacing-3xl) 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .home .container {
+    max-width: 540px;
+    padding: 0 var(--spacing-md);
+  }
+
+  .home section {
+    padding: var(--spacing-2xl) 0;
+  }
+
+  .home .trust-indicators,
+  .home .stats-section,
+  .home .how-it-works,
+  .home .featured-services,
+  .home .why-choose-us,
+  .home .recent-events,
+  .home .testimonials,
+  .home .faq-section,
+  .home .newsletter,
+  .home .call-to-action {
+    padding: var(--spacing-2xl) 0;
+  }
+
+  .home .section-header {
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  .home .section-header h2 {
+    font-size: var(--font-size-2xl);
+  }
+
+  .home .section-header p {
+    font-size: var(--font-size-base);
+  }
+}
+
+@media (max-width: 576px) {
+  .home .container {
+    padding: 0 var(--spacing-sm);
+  }
+
+  .home section {
+    padding: var(--spacing-xl) 0;
+  }
+
+  .home .trust-indicators,
+  .home .stats-section,
+  .home .how-it-works,
+  .home .featured-services,
+  .home .why-choose-us,
+  .home .recent-events,
+  .home .testimonials,
+  .home .faq-section,
+  .home .newsletter,
+  .home .call-to-action {
+    padding: var(--spacing-xl) 0;
+  }
+
+  .home .section-header {
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .home .section-header h2 {
+    font-size: var(--font-size-xl);
+  }
+}
+
+/* Animation for Smooth Loading */
+.home section {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.6s ease-in-out;
+}
+
+/* Ensure proper stacking context */
+.home {
+  position: relative;
+  z-index: 0;
+}
+
+/* Fix any potential layout issues */
+.home section {
+  min-height: auto;
+  overflow: visible;
+}
+
+/* Clearfix for any floating elements */
+.home section::after {
+  content: "";
+  display: table;
+  clear: both;
+}
