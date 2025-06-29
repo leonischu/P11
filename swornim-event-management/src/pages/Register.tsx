@@ -1,24 +1,130 @@
-"use client"
+import React, { useState } from "react"
 
-import type React from "react"
-import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import "./Register.css"
-import { apiRequest } from '../api'
+// Mock Formik and Yup for demo purposes
+const Formik = ({ children, initialValues, validationSchema, onSubmit }) => {
+  const [values, setValues] = useState(initialValues)
+  const [errors, setErrors] = useState({})
+  const [touched, setTouched] = useState({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-const mapUserTypeToRole = (userType: string) => {
-  switch (userType) {
-    case "vendor":
-      return "cameraman" // or dynamically choose based on vendor type later
-    case "customer":
-    default:
-      return "client"
+  const validateField = (name, value) => {
+    // Simple validation logic for demo
+    const newErrors = { ...errors }
+    
+    if (name === 'firstName' && !value) newErrors.firstName = 'First name is required'
+    else if (name === 'firstName') delete newErrors.firstName
+    
+    if (name === 'lastName' && !value) newErrors.lastName = 'Last name is required'
+    else if (name === 'lastName') delete newErrors.lastName
+    
+    if (name === 'email' && !value) newErrors.email = 'Email is required'
+    else if (name === 'email' && value && !value.includes('@')) newErrors.email = 'Invalid email'
+    else if (name === 'email') delete newErrors.email
+    
+    if (name === 'phone' && !value) newErrors.phone = 'Phone number is required'
+    else if (name === 'phone') delete newErrors.phone
+    
+    if (name === 'password' && !value) newErrors.password = 'Password is required'
+    else if (name === 'password' && value && value.length < 6) newErrors.password = 'Password must be at least 6 characters'
+    else if (name === 'password') delete newErrors.password
+    
+    if (name === 'confirmPassword' && value !== values.password) newErrors.confirmPassword = 'Passwords must match'
+    else if (name === 'confirmPassword') delete newErrors.confirmPassword
+    
+    if (name === 'agreeToTerms' && !value) newErrors.agreeToTerms = 'You must agree to terms and conditions'
+    else if (name === 'agreeToTerms') delete newErrors.agreeToTerms
+    
+    setErrors(newErrors)
   }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    
+    // Validate all fields
+    Object.keys(values).forEach(key => validateField(key, values[key]))
+    
+    if (Object.keys(errors).length === 0) {
+      await onSubmit(values)
+    }
+    setIsSubmitting(false)
+  }
+
+  return children({
+    isSubmitting,
+    handleSubmit,
+    values,
+    errors,
+    touched,
+    setFieldValue: (name, value) => {
+      setValues({ ...values, [name]: value })
+      validateField(name, value)
+    },
+    setFieldTouched: (name) => setTouched({ ...touched, [name]: true })
+  })
 }
 
+const Form = ({ children, onSubmit, ...props }) => (
+  <div onSubmit={onSubmit} {...props}>
+    {children}
+  </div>
+)
 
-const Register: React.FC = () => {
-  const [formData, setFormData] = useState({
+const Field = ({ name, type, className, placeholder, id, as: Component = "input", children, ...props }) => {
+  const formik = React.useContext(FormikContext) || {}
+  
+  if (Component === "select") {
+    return (
+      <select
+        id={id}
+        name={name}
+        className={className}
+        value={formik.values?.[name] || ""}
+        onChange={(e) => formik.setFieldValue?.(name, e.target.value)}
+        onBlur={() => formik.setFieldTouched?.(name)}
+        {...props}
+      >
+        {children}
+      </select>
+    )
+  }
+  
+  return (
+    <input
+      type={type}
+      id={id}
+      name={name}
+      className={className}
+      placeholder={placeholder}
+      value={type === "checkbox" ? undefined : (formik.values?.[name] || "")}
+      checked={type === "checkbox" ? formik.values?.[name] || false : undefined}
+      onChange={(e) => {
+        const value = type === "checkbox" ? e.target.checked : e.target.value
+        formik.setFieldValue?.(name, value)
+      }}
+      onBlur={() => formik.setFieldTouched?.(name)}
+      {...props}
+    />
+  )
+}
+
+const ErrorMessage = ({ name, component: Component = "div", className }) => {
+  const formik = React.useContext(FormikContext) || {}
+  const error = formik.errors?.[name]
+  const touched = formik.touched?.[name]
+  
+  if (!error || !touched) return null
+  
+  return <Component className={className}>{error}</Component>
+}
+
+const FormikContext = React.createContext()
+
+const Register = () => {
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+
+  const initialValues = {
     firstName: "",
     lastName: "",
     email: "",
@@ -27,260 +133,355 @@ const Register: React.FC = () => {
     confirmPassword: "",
     userType: "customer",
     agreeToTerms: false,
-  })
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
-  const navigate = useNavigate()
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target
-    setFormData({
-      ...formData,
-      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
-    })
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (values) => {
     setIsLoading(true)
     setError("")
 
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match")
-      setIsLoading(false)
-      return
-    }
-
-    if (!formData.agreeToTerms) {
-      setError("Please agree to the terms and conditions")
-      setIsLoading(false)
-      return
-    }
-
     try {
-      await apiRequest('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: `${formData.firstName} ${formData.lastName}`.trim(),
-          email: formData.email,
-          phone: formData.phone,
-          password: formData.password,
-          confirmPassword: formData.confirmPassword,
-          userType: formData.userType === 'vendor' ? 'cameraman' : 'client',
-        }),
-      })
-      alert("Registration successful! Please verify your email.")
-      navigate("/login")
-    } catch (err: any) {
-      setError(err.message || "Registration failed. Please try again.")
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      alert(`Registration successful for ${values.firstName} ${values.lastName}!`)
+      console.log("Form values:", values)
+    } catch (err) {
+      setError("Registration failed. Please try again.")
     } finally {
       setIsLoading(false)
     }
   }
 
-
   return (
-    <div className="register-page">
-      <div className="register-container">
-        <div className="register-content">
-          <div className="register-header">
-            <h1>Create Your Account</h1>
-            <p>Join Swornim and start planning amazing events</p>
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px'
+    }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        maxWidth: '1200px',
+        width: '100%',
+        background: 'white',
+        borderRadius: '20px',
+        overflow: 'hidden',
+        boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+        minHeight: '700px'
+      }}>
+        <div style={{ padding: '40px' }}>
+          <div style={{ marginBottom: '30px', textAlign: 'center' }}>
+            <h1 style={{ 
+              fontSize: '2.5rem', 
+              fontWeight: 'bold', 
+              color: '#333',
+              marginBottom: '10px'
+            }}>
+              Create Your Account
+            </h1>
+            <p style={{ color: '#666', fontSize: '1.1rem' }}>
+              Join Swornim and start planning amazing events
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="register-form">
-            {error && <div className="alert alert-error">{error}</div>}
+          <Formik
+            initialValues={initialValues}
+            onSubmit={handleSubmit}
+          >
+            {(formik) => (
+              <FormikContext.Provider value={formik}>
+                <Form style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  {error && (
+                    <div style={{ 
+                      background: '#fee', 
+                      color: '#c33', 
+                      padding: '12px', 
+                      borderRadius: '8px',
+                      border: '1px solid #fcc'
+                    }}>
+                      {error}
+                    </div>
+                  )}
 
-            <div className="form-group">
-              <label htmlFor="userType" className="form-label">
-                I want to:
-              </label>
-              <select
-                id="userType"
-                name="userType"
-                value={formData.userType}
-                onChange={handleChange}
-                className="form-select"
-                required
-              >
-                <option value="customer">Book services for my events</option>
-                <option value="vendor">Offer my services as a vendor</option>
-              </select>
-            </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#333' }}>
+                      I want to:
+                    </label>
+                    <Field 
+                      as="select" 
+                      name="userType" 
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        border: '2px solid #e1e5e9',
+                        borderRadius: '10px',
+                        fontSize: '16px',
+                        backgroundColor: 'white'
+                      }}
+                    >
+                      <option value="customer">Book services for my events</option>
+                      <option value="vendor">Offer my services as a vendor</option>
+                    </Field>
+                    <ErrorMessage name="userType" className="field-error" />
+                  </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="firstName" className="form-label">
-                  First Name
-                </label>
-                <input
-                  type="text"
-                  id="firstName"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Enter your first name"
-                  required
-                />
-              </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#333' }}>
+                        First Name
+                      </label>
+                      <Field
+                        type="text"
+                        name="firstName"
+                        placeholder="Enter your first name"
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          border: '2px solid #e1e5e9',
+                          borderRadius: '10px',
+                          fontSize: '16px'
+                        }}
+                      />
+                      <ErrorMessage name="firstName" component="div" style={{ color: '#c33', fontSize: '14px', marginTop: '5px' }} />
+                    </div>
 
-              <div className="form-group">
-                <label htmlFor="lastName" className="form-label">
-                  Last Name
-                </label>
-                <input
-                  type="text"
-                  id="lastName"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Enter your last name"
-                  required
-                />
-              </div>
-            </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#333' }}>
+                        Last Name
+                      </label>
+                      <Field
+                        type="text"
+                        name="lastName"
+                        placeholder="Enter your last name"
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          border: '2px solid #e1e5e9',
+                          borderRadius: '10px',
+                          fontSize: '16px'
+                        }}
+                      />
+                      <ErrorMessage name="lastName" component="div" style={{ color: '#c33', fontSize: '14px', marginTop: '5px' }} />
+                    </div>
+                  </div>
 
-            <div className="form-group">
-              <label htmlFor="email" className="form-label">
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="form-input"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#333' }}>
+                      Email Address
+                    </label>
+                    <Field
+                      type="email"
+                      name="email"
+                      placeholder="Enter your email"
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        border: '2px solid #e1e5e9',
+                        borderRadius: '10px',
+                        fontSize: '16px'
+                      }}
+                    />
+                    <ErrorMessage name="email" component="div" style={{ color: '#c33', fontSize: '14px', marginTop: '5px' }} />
+                  </div>
 
-            <div className="form-group">
-              <label htmlFor="phone" className="form-label">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="form-input"
-                placeholder="+977-XXXXXXXXXX"
-                required
-              />
-            </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#333' }}>
+                      Phone Number
+                    </label>
+                    <Field
+                      type="tel"
+                      name="phone"
+                      placeholder="+977-XXXXXXXXXX"
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        border: '2px solid #e1e5e9',
+                        borderRadius: '10px',
+                        fontSize: '16px'
+                      }}
+                    />
+                    <ErrorMessage name="phone" component="div" style={{ color: '#c33', fontSize: '14px', marginTop: '5px' }} />
+                  </div>
 
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="password" className="form-label">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Create a password"
-                  required
-                />
-              </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#333' }}>
+                        Password
+                      </label>
+                      <Field
+                        type="password"
+                        name="password"
+                        placeholder="Create a password"
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          border: '2px solid #e1e5e9',
+                          borderRadius: '10px',
+                          fontSize: '16px'
+                        }}
+                      />
+                      <ErrorMessage name="password" component="div" style={{ color: '#c33', fontSize: '14px', marginTop: '5px' }} />
+                    </div>
 
-              <div className="form-group">
-                <label htmlFor="confirmPassword" className="form-label">
-                  Confirm Password
-                </label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="Confirm your password"
-                  required
-                />
-              </div>
-            </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#333' }}>
+                        Confirm Password
+                      </label>
+                      <Field
+                        type="password"
+                        name="confirmPassword"
+                        placeholder="Confirm your password"
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          border: '2px solid #e1e5e9',
+                          borderRadius: '10px',
+                          fontSize: '16px'
+                        }}
+                      />
+                      <ErrorMessage name="confirmPassword" component="div" style={{ color: '#c33', fontSize: '14px', marginTop: '5px' }} />
+                    </div>
+                  </div>
 
-            <div className="form-group">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  name="agreeToTerms"
-                  checked={formData.agreeToTerms}
-                  onChange={handleChange}
-                  required
-                />
-                <span>
-                  I agree to the{" "}
-                  <Link to="/terms" target="_blank">
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link to="/privacy" target="_blank">
-                    Privacy Policy
-                  </Link>
-                </span>
-              </label>
-            </div>
+                  <div>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                      <Field type="checkbox" name="agreeToTerms" />
+                      <span style={{ fontSize: '14px', color: '#555' }}>
+                        I agree to the{" "}
+                        <a href="#" style={{ color: '#667eea', textDecoration: 'none' }}>
+                          Terms of Service
+                        </a>{" "}
+                        and{" "}
+                        <a href="#" style={{ color: '#667eea', textDecoration: 'none' }}>
+                          Privacy Policy
+                        </a>
+                      </span>
+                    </label>
+                    <ErrorMessage name="agreeToTerms" component="div" style={{ color: '#c33', fontSize: '14px', marginTop: '5px' }} />
+                  </div>
 
-            <button type="submit" className="btn btn-primary btn-lg w-100" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <span className="loading"></span>
-                  Creating Account...
-                </>
-              ) : (
-                "Create Account"
-              )}
-            </button>
-          </form>
+                  <button
+                    type="submit"
+                    disabled={formik.isSubmitting || isLoading}
+                    style={{
+                      width: '100%',
+                      padding: '15px',
+                      background: formik.isSubmitting || isLoading ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '10px',
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      cursor: formik.isSubmitting || isLoading ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.3s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '10px'
+                    }}
+                  >
+                    {formik.isSubmitting || isLoading ? (
+                      <>
+                        <div style={{
+                          width: '20px',
+                          height: '20px',
+                          border: '2px solid transparent',
+                          borderTop: '2px solid white',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite'
+                        }}></div>
+                        Creating Account...
+                      </>
+                    ) : (
+                      "Create Account"
+                    )}
+                  </button>
+                </Form>
+              </FormikContext.Provider>
+            )}
+          </Formik>
 
-          <div className="register-footer">
-            <p>
+          <div style={{ textAlign: 'center', marginTop: '20px' }}>
+            <p style={{ color: '#666' }}>
               Already have an account?{" "}
-              <Link to="/login" className="login-link">
+              <a href="#" style={{ color: '#667eea', textDecoration: 'none', fontWeight: '500' }}>
                 Sign in here
-              </Link>
+              </a>
             </p>
           </div>
         </div>
 
-        <div className="register-image">
-          <img src="/images/register-bg.jpg" alt="Event planning" />
-          <div className="image-overlay">
-            <h2>Start Your Event Journey</h2>
-            <p>Connect with the best vendors and create unforgettable memories</p>
-            <div className="features-list">
-              <div className="feature">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M9 12l2 2 4-4"></path>
-                  <circle cx="12" cy="12" r="10"></circle>
-                </svg>
-                <span>Verified Vendors</span>
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9))',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          color: 'white',
+          padding: '40px',
+          textAlign: 'center'
+        }}>
+          <div style={{ marginBottom: '40px' }}>
+            <h2 style={{ fontSize: '2rem', marginBottom: '15px' }}>Start Your Event Journey</h2>
+            <p style={{ fontSize: '1.1rem', opacity: 0.9 }}>
+              Connect with the best vendors and create unforgettable memories
+            </p>
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <div style={{ 
+                width: '40px', 
+                height: '40px', 
+                background: 'rgba(255,255,255,0.2)', 
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                ✓
               </div>
-              <div className="feature">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
-                </svg>
-                <span>Best Prices</span>
+              <span style={{ fontSize: '1.1rem' }}>Verified Vendors</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <div style={{ 
+                width: '40px', 
+                height: '40px', 
+                background: 'rgba(255,255,255,0.2)', 
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                ⭐
               </div>
-              <div className="feature">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                </svg>
-                <span>24/7 Support</span>
+              <span style={{ fontSize: '1.1rem' }}>Best Prices</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <div style={{ 
+                width: '40px', 
+                height: '40px', 
+                background: 'rgba(255,255,255,0.2)', 
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                📞
               </div>
+              <span style={{ fontSize: '1.1rem' }}>24/7 Support</span>
             </div>
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }
